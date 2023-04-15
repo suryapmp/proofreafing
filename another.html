@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body></body>
+</html>
+
+<script>
+  // get file input element
+  var fileInput = document.getElementById("fileInput");
+  // define profanity list
+  var profanityList = ["badword1", "badword2", "badword3"];
+  // read uploaded file
+  fileInput.addEventListener("change", function (e) {
+    var file = fileInput.files[0];
+    var reader = new FileReader();
+    reader.onload = function (e) {
+      var inputText = e.target.result;
+      // loop through profanity list and highlight any profanity found
+      for (var i = 0; i < profanityList.length; i++) {
+        var re = new RegExp(profanityList[i], "gi");
+        inputText = inputText.replace(
+          re,
+          "<span style='background-color:red;'>" + profanityList[i] + "</span>"
+        );
+      }
+      // display modified text with highlighted profanity
+      document.getElementById("output").innerHTML = inputText;
+    };
+    reader.readAsText(file);
+  });
+</script>
