@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
+    <title>Thapa Char Conunter</title>
+    <script src="https://cdn.jsdelivr.net/npm/@grammarly/editor-sdk?clientId=client_JjwW3ANJy4WrGHdmGHUvPp"></script>
+  </head>
+  <body>
+    <div class="container">
+      <grammarly-editor-plugin>
+        <textarea id="textarea" class="textarea" maxlength="150"></textarea>
+      </grammarly-editor-plugin>
+      <div class="counter-container">
+        <p>Total character: <span id="total-conter"> 0</span></p>
+        <p>
+          Remaining:
+          <span class="remaining-counter" id="remaining-counter">150</span>
+        </p>
+      </div>
+    </div>
+    <input type="file" id="file" />
+    <div id="output"></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mammoth/mammoth.browser.min.js"></script>
+
+    <script>
+      const inputElement = document.getElementById("file");
+      const outputElement = document.getElementById("textarea");
+
+      inputElement.addEventListener("change", handleFiles, false);
+
+      function handleFiles() {
+        const file = this.files[0];
+
+        if (file.type === "application/pdf") {
+          const reader = new FileReader();
+
+          reader.onload = function (event) {
+            const typedarray = new Uint8Array(event.target.result);
+
+            pdfjsLib
+              .getDocument(typedarray)
+              .promise.then(function (pdfDoc) {
+                let pdfText = "";
+                let pdfPromises = [];
+
+                for (let i = 1; i <= pdfDoc.numPages; i++) {
+                  pdfPromises.push(
+                    pdfDoc.getPage(i).then(function (page) {
+                      return page.getTextContent();
+                    })
+                  );
+                }
+
+                Promise.all(pdfPromises).then(function (contents) {
+                  contents.forEach(function (content) {
+                    pdfText += content.items
+                      .map(function (item) {
+                        return item.str;
+                      })
+                      .join("");
+                  });
+
+                  outputElement.innerText = pdfText;
+                });
+              })
+              .catch(function (error) {
+                console.error(error);
+              });
+          };
+
+          reader.readAsArrayBuffer(file);
+        } else if (
+          file.type ===
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        ) {
+          const reader = new FileReader();
+
+          reader.onload = function (event) {
+            const arrayBuffer = event.target.result;
+
+            mammoth
+              .convertToHtml({ arrayBuffer: arrayBuffer })
+              .then(function (result) {
+                const htmlText = result.value;
+                const plainText = htmlText.replace(/<(?:.|\n)*?>/gm, " ");
+                outputElement.innerText = plainText;
+                outputElement.focus();
+              })
+              .done();
+          };
+
+          reader.readAsArrayBuffer(file);
+        } else {
+          alert("Please select a Microsoft Word or PDF document.");
+          return;
+        }
+      }
+    </script>
+
+    <script src="index.js"></script>
+  </body>
+</html>
